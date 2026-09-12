@@ -1,0 +1,31 @@
+# Python virtual environment
+.venv/
+venv/
+ENV/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / frontend artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Local project folders that should not be versioned
+cache/
+Data/
+
+# IDE/editor folders
+.vscode/
+.DS_Store
+
+# Logs and local env files
+*.log
+.env
+.env.*
