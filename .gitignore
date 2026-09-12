@@ -25,7 +25,4 @@ Data/
 .vscode/
 .DS_Store
 
-# Logs and local env files
-*.log
-.env
-.env.*
+

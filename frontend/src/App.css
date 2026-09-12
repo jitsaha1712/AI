@@ -1,21 +1,25 @@
+
 * {
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
   margin: 0;
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-
-  background: #f4f7fb;
-
-  color: #172033;
+  width: 100%;
+  min-height: 100%;
 }
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+}
+
+
+/* ============================================================
+   APP
+   ============================================================ */
 
 .app {
   min-height: 100vh;
@@ -27,14 +31,11 @@ body {
    ============================================================ */
 
 .header {
-  padding: 22px 32px;
+  width: 100%;
 
-  background:
-    linear-gradient(
-      135deg,
-      #0f172a,
-      #1e3a8a
-    );
+  padding: 25px 30px;
+
+  background: #172554;
 
   color: white;
 }
@@ -42,74 +43,90 @@ body {
 .header h1 {
   margin: 0;
 
-  font-size: 26px;
+  font-size: 28px;
 }
 
 .header p {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
+
+  font-size: 15px;
 
   opacity: 0.85;
 }
 
 
 /* ============================================================
-   CONTROL PANEL
+   CONTROLS
    ============================================================ */
 
-.control-panel {
-  display: grid;
+.controls {
+  width: 100%;
 
-  grid-template-columns:
-    repeat(4, 1fr)
-    auto;
-
-  gap: 14px;
-
-  padding: 18px 24px;
+  padding: 20px 24px;
 
   background: white;
 
-  border-bottom:
-    1px solid #e5e7eb;
-}
-
-.input-group {
   display: flex;
 
-  flex-direction: column;
+  align-items: flex-end;
 
-  gap: 6px;
+  gap: 20px;
+
+  flex-wrap: wrap;
+
+  border-bottom: 1px solid #ddd;
 }
 
-.input-group label {
-  font-size: 12px;
 
-  font-weight: 600;
+/* ============================================================
+   LOCATION BOX
+   ============================================================ */
 
-  color: #64748b;
+.location-box {
+  padding: 14px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 10px;
+
+  min-width: 320px;
 }
 
-.input-group input {
-  width: 100%;
+.location-box h3 {
+  margin: 0 0 10px;
 
-  padding: 11px 12px;
+  font-size: 16px;
+}
 
-  border:
-    1px solid #cbd5e1;
 
-  border-radius: 8px;
+/* ============================================================
+   INPUTS
+   ============================================================ */
 
-  outline: none;
+.inputs {
+  display: flex;
+
+  gap: 10px;
+}
+
+.inputs input {
+  width: 140px;
+
+  padding: 10px;
+
+  border: 1px solid #cbd5e1;
+
+  border-radius: 7px;
 
   font-size: 14px;
 }
 
-.input-group input:focus {
-  border-color: #2563eb;
+.inputs input:focus {
+  outline: none;
 
-  box-shadow:
-    0 0 0 3px
-    rgba(37, 99, 235, 0.12);
+  border-color: #2563eb;
 }
 
 
@@ -117,10 +134,8 @@ body {
    BUTTON
    ============================================================ */
 
-.route-button {
-  align-self: end;
-
-  padding: 11px 20px;
+.controls button {
+  padding: 12px 20px;
 
   border: none;
 
@@ -130,18 +145,18 @@ body {
 
   color: white;
 
-  font-weight: 700;
+  font-size: 14px;
+
+  font-weight: bold;
 
   cursor: pointer;
-
-  white-space: nowrap;
 }
 
-.route-button:hover {
+.controls button:hover {
   background: #1d4ed8;
 }
 
-.route-button:disabled {
+.controls button:disabled {
   opacity: 0.6;
 
   cursor: not-allowed;
@@ -152,18 +167,16 @@ body {
    ERROR
    ============================================================ */
 
-.error-box {
-  margin: 16px 24px;
+.error {
+  margin: 15px 24px;
 
-  padding: 12px 16px;
+  padding: 12px;
 
   border-radius: 8px;
 
   background: #fee2e2;
 
   color: #991b1b;
-
-  font-weight: 600;
 }
 
 
@@ -171,44 +184,50 @@ body {
    SUMMARY
    ============================================================ */
 
-.summary-grid {
+.summary {
+  padding: 18px 24px;
+
   display: grid;
 
   grid-template-columns:
     repeat(6, 1fr);
 
   gap: 12px;
-
-  padding: 18px 24px;
 }
 
-.summary-card {
-  padding: 16px;
+.card {
+  padding: 15px;
 
   background: white;
 
-  border:
-    1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
 
   border-radius: 10px;
-
-  box-shadow:
-    0 2px 8px
-    rgba(15, 23, 42, 0.04);
 }
 
-.summary-card span {
+.card span {
   display: block;
 
-  font-size: 12px;
+  margin-bottom: 6px;
 
   color: #64748b;
 
-  margin-bottom: 7px;
+  font-size: 12px;
 }
 
-.summary-card strong {
-  font-size: 21px;
+.card strong {
+  font-size: 20px;
+}
+
+
+/* ============================================================
+   MAP WRAPPER
+   ============================================================ */
+
+.map-wrapper {
+  width: 100%;
+
+  padding: 0 24px 24px;
 }
 
 
@@ -216,126 +235,16 @@ body {
    MAP
    ============================================================ */
 
-.map-section {
-  margin: 0 24px;
-}
-
 .map {
   width: 100%;
 
-  height: 620px;
+  height: 650px;
 
-  border-radius: 14px;
+  min-height: 650px;
+
+  border-radius: 12px;
 
   overflow: hidden;
-
-  box-shadow:
-    0 5px 20px
-    rgba(15, 23, 42, 0.10);
-}
-
-
-/* ============================================================
-   CHECKPOINT MARKER
-   ============================================================ */
-
-.checkpoint-marker {
-  background: transparent;
-
-  border: none;
-}
-
-.checkpoint-circle {
-  width: 30px;
-
-  height: 30px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: #2563eb;
-
-  border:
-    3px solid white;
-
-  color: white;
-
-  font-size: 10px;
-
-  font-weight: 800;
-
-  box-shadow:
-    0 2px 7px
-    rgba(0, 0, 0, 0.35);
-}
-
-
-/* ============================================================
-   POPUP
-   ============================================================ */
-
-.checkpoint-popup h3 {
-  margin-top: 0;
-
-  margin-bottom: 10px;
-}
-
-.checkpoint-popup p {
-  margin: 5px 0;
-}
-
-
-/* ============================================================
-   LEGEND
-   ============================================================ */
-
-.legend {
-  display: flex;
-
-  gap: 20px;
-
-  padding: 16px 24px 24px;
-}
-
-.legend-item {
-  display: flex;
-
-  align-items: center;
-
-  gap: 7px;
-
-  font-size: 13px;
-
-  font-weight: 600;
-}
-
-.legend-color {
-  width: 14px;
-
-  height: 14px;
-
-  border-radius: 50%;
-}
-
-.legend-color.low {
-  background: #16a34a;
-}
-
-.legend-color.moderate {
-  background: #eab308;
-}
-
-.legend-color.high {
-  background: #f97316;
-}
-
-.legend-color.very-high {
-  background: #dc2626;
 }
 
 
@@ -345,35 +254,35 @@ body {
 
 @media (max-width: 1000px) {
 
-  .control-panel {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
-
-  .summary-grid {
+  .summary {
     grid-template-columns:
       repeat(3, 1fr);
   }
 
 }
 
-@media (max-width: 650px) {
+@media (max-width: 700px) {
 
-  .control-panel {
-    grid-template-columns: 1fr;
+  .controls {
+    flex-direction: column;
+
+    align-items: stretch;
   }
 
-  .summary-grid {
+  .location-box {
+    min-width: 100%;
+  }
+
+  .inputs input {
+    flex: 1;
+
+    width: auto;
+  }
+
+  .summary {
     grid-template-columns:
       repeat(2, 1fr);
   }
 
-  .header {
-    padding: 18px;
-  }
-
-  .map-section {
-    margin: 0 12px;
-  }
-
 }
+
