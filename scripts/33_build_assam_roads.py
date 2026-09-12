@@ -6,20 +6,13 @@ DB_CONFIG = {
     "port": 5432,
     "dbname": "assam_routing",
     "user": "postgres",
-    "password": "postgres",   # your local password
+    "password": "postgres",   # PUT YOUR LOCAL POSTGRES PASSWORD HERE
 }
 
 
-# ------------------------------------------------------------
-# IMPORTANT
-#
-# This is a working Assam bounding box.
-#
-# It is intentionally a little larger than Assam so roads near
-# the state boundary are not accidentally cut off.
-#
-# We will refine this with the actual Assam boundary later.
-# ------------------------------------------------------------
+# ============================================================
+# ASSAM AREA
+# ============================================================
 
 MIN_LON = 89.5
 MAX_LON = 96.2
@@ -43,52 +36,73 @@ try:
 
     print("\nConnected to PostgreSQL.")
 
-    # --------------------------------------------------------
-    # 1. Inspect source road table
-    # --------------------------------------------------------
+
+    # ========================================================
+    # 1. BASIC TABLE CHECK
+    # ========================================================
 
     cur.execute(
         """
         SELECT COUNT(*)
-        FROM road_edges;
+        FROM public.road_edges
+        WHERE geometry IS NOT NULL;
         """
     )
 
     total_roads = cur.fetchone()[0]
 
     print(
-        f"Total road_edges available: {total_roads:,}"
+        f"Roads with geometry: {total_roads:,}"
     )
 
-    # --------------------------------------------------------
-    # 2. Remove previous Assam working table
-    # --------------------------------------------------------
+
+    # ========================================================
+    # 2. CHECK CRS
+    # ========================================================
 
     cur.execute(
         """
-        DROP TABLE IF EXISTS routing_edges_assam;
+        SELECT
+            ST_SRID(geometry)
+        FROM public.road_edges
+        WHERE geometry IS NOT NULL
+        LIMIT 1;
         """
     )
 
-    # --------------------------------------------------------
-    # 3. Create Assam road subset
+    srid = cur.fetchone()[0]
+
+    print(
+        f"Road geometry SRID: EPSG:{srid}"
+    )
+
+
+    # ========================================================
+    # 3. TEST ASSAM BBOX
     #
-    # ST_Intersects is used so roads crossing the bbox
-    # boundary are retained.
-    #
-    # ST_Expand around the bbox is NOT required because
-    # the bbox itself is deliberately generous.
-    # --------------------------------------------------------
+    # Transform each road FROM UTM 45N -> WGS84
+    # and test against the WGS84 Assam bounding box.
+    # ========================================================
+
+    print(
+        "\nChecking Assam road coverage..."
+    )
 
     cur.execute(
         """
-        CREATE TABLE routing_edges_assam AS
+        SELECT COUNT(*)
 
-        SELECT *
-        FROM road_edges
+        FROM public.road_edges
 
-        WHERE ST_Intersects(
-            geometry,
+        WHERE geometry IS NOT NULL
+
+        AND ST_Intersects(
+
+            ST_Transform(
+                geometry,
+                4326
+            ),
+
             ST_MakeEnvelope(
                 %s,
                 %s,
@@ -96,74 +110,224 @@ try:
                 %s,
                 4326
             )
+
         );
         """,
         (
             MIN_LON,
             MIN_LAT,
             MAX_LON,
-            MAX_LAT,
+            MAX_LAT
         )
     )
 
-    # --------------------------------------------------------
-    # 4. Count Assam roads
-    # --------------------------------------------------------
+    selected_count = cur.fetchone()[0]
+
+    print(
+        f"Roads inside Assam bbox: {selected_count:,}"
+    )
+
+
+    if selected_count == 0:
+
+        raise RuntimeError(
+            "Still zero roads. Run the diagnostic SQL queries next."
+        )
+
+
+    # ========================================================
+    # 4. DROP OLD TABLE
+    # ========================================================
+
+    cur.execute(
+        """
+        DROP TABLE IF EXISTS
+        public.routing_edges_assam;
+        """
+    )
+
+
+    # ========================================================
+    # 5. CREATE ASSAM ROAD TABLE
+    # ========================================================
+
+    print(
+        "\nCreating routing_edges_assam..."
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE public.routing_edges_assam AS
+
+        SELECT *
+
+        FROM public.road_edges
+
+        WHERE geometry IS NOT NULL
+
+        AND ST_Intersects(
+
+            ST_Transform(
+                geometry,
+                4326
+            ),
+
+            ST_MakeEnvelope(
+                %s,
+                %s,
+                %s,
+                %s,
+                4326
+            )
+
+        );
+        """,
+        (
+            MIN_LON,
+            MIN_LAT,
+            MAX_LON,
+            MAX_LAT
+        )
+    )
+
+
+    # ========================================================
+    # 6. CREATE SPATIAL INDEX
+    # ========================================================
+
+    print(
+        "Creating spatial index..."
+    )
+
+    cur.execute(
+        """
+        CREATE INDEX
+        routing_edges_assam_geom_idx
+
+        ON public.routing_edges_assam
+
+        USING GIST (
+            geometry
+        );
+        """
+    )
+
+
+    # ========================================================
+    # 7. ANALYZE
+    # ========================================================
+
+    cur.execute(
+        """
+        ANALYZE public.routing_edges_assam;
+        """
+    )
+
+
+    # ========================================================
+    # 8. FINAL COUNT
+    # ========================================================
 
     cur.execute(
         """
         SELECT COUNT(*)
-        FROM routing_edges_assam;
+        FROM public.routing_edges_assam;
         """
     )
 
-    assam_roads = cur.fetchone()[0]
+    final_count = cur.fetchone()[0]
 
     print(
-        f"Roads selected for Assam area: {assam_roads:,}"
+        f"\nFinal Assam road count: {final_count:,}"
     )
 
-    if assam_roads == 0:
 
-        raise RuntimeError(
-            "No roads were found in the Assam bounding box."
-        )
-
-    # --------------------------------------------------------
-    # 5. Spatial index
-    # --------------------------------------------------------
-
-    print(
-        "\nCreating spatial index..."
-    )
+    # ========================================================
+    # 9. GEOGRAPHIC EXTENT
+    # ========================================================
 
     cur.execute(
         """
-        CREATE INDEX routing_edges_assam_geom_idx
-        ON routing_edges_assam
-        USING GIST (geometry);
+        SELECT
+
+            ST_XMin(
+                ST_Extent(
+                    ST_Transform(
+                        geometry,
+                        4326
+                    )
+                )
+            ) AS min_lon,
+
+            ST_YMin(
+                ST_Extent(
+                    ST_Transform(
+                        geometry,
+                        4326
+                    )
+                )
+            ) AS min_lat,
+
+            ST_XMax(
+                ST_Extent(
+                    ST_Transform(
+                        geometry,
+                        4326
+                    )
+                )
+            ) AS max_lon,
+
+            ST_YMax(
+                ST_Extent(
+                    ST_Transform(
+                        geometry,
+                        4326
+                    )
+                )
+            ) AS max_lat
+
+        FROM public.routing_edges_assam;
         """
     )
 
-    # --------------------------------------------------------
-    # 6. Analyze
-    # --------------------------------------------------------
+    extent = cur.fetchone()
 
-    cur.execute(
-        """
-        ANALYZE routing_edges_assam;
-        """
+    print("\nAssam road extent:")
+    print(
+        f"Longitude: {extent[0]:.6f} -> {extent[2]:.6f}"
     )
+    print(
+        f"Latitude : {extent[1]:.6f} -> {extent[3]:.6f}"
+    )
+
+
+    # ========================================================
+    # 10. COMMIT
+    # ========================================================
 
     conn.commit()
 
     print(
-        "\nSUCCESS: routing_edges_assam created."
+        "\n========================================"
     )
+
+    print(
+        "SUCCESS!"
+    )
+
+    print(
+        "Created: public.routing_edges_assam"
+    )
+
+    print(
+        "========================================"
+    )
+
 
 except Exception as e:
 
     if conn is not None:
+
         conn.rollback()
 
     print(
@@ -171,9 +335,11 @@ except Exception as e:
         str(e)
     )
 
+
 finally:
 
     if conn is not None:
+
         conn.close()
 
     print(
